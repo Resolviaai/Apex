@@ -1847,6 +1847,12 @@ export default function App() {
         insertPayload.location = locationDetail;
       }
 
+      if (!supabase) {
+        console.error('Supabase is not configured (missing VITE_SUPABASE_* env vars).');
+        setSubmitStatus('error');
+        return;
+      }
+
       const { error } = await supabase.from('leads').insert(insertPayload);
 
       if (error) {
