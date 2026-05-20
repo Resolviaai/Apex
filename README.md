@@ -41,7 +41,7 @@ The project includes foundational SEO assets for the homepage:
 - `public/sitemap.xml` publishes the production homepage URL
 - `metadata.json` describes the Apex site
 
-The canonical production URL is currently set to `https://Resolvia-edit.netlify.app/`. If the live domain changes, update the SEO files to match.
+The canonical production URL is `https://apex-edit.netlify.app/`.
 
 ## Project structure
 
