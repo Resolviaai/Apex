@@ -9,3 +9,12 @@
   from = "/*"
   to = "/index.html"
   status = 200
+
+# Fix MIME type for GDevelop .js.download files so browsers execute them as JS.
+# Without this, many static hosts serve them as application/octet-stream which
+# causes crossorigin script blocks to fail silently.
+[[headers]]
+  for = "/dino-game/*.js.download"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
+    Cache-Control = "public, max-age=31536000, immutable"

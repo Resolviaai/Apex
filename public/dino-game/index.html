@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -183,13 +183,19 @@
               canvas.dispatchEvent(spaceUp);
             }, 50);
 
-            // Dispatch mobile touch event in case it starts via touch
-            var touchStart = new TouchEvent('touchstart', { bubbles: true });
-            var touchEnd = new TouchEvent('touchend', { bubbles: true });
-            canvas.dispatchEvent(touchStart);
-            setTimeout(function() {
-              canvas.dispatchEvent(touchEnd);
-            }, 50);
+            // Dispatch mobile touch event only in environments that support TouchEvent
+            if (typeof TouchEvent !== 'undefined') {
+              try {
+                var touchStart = new TouchEvent('touchstart', { bubbles: true });
+                var touchEnd = new TouchEvent('touchend', { bubbles: true });
+                canvas.dispatchEvent(touchStart);
+                setTimeout(function() {
+                  canvas.dispatchEvent(touchEnd);
+                }, 50);
+              } catch (e) {
+                // TouchEvent constructor not supported on this browser — skip silently
+              }
+            }
           }
         }, 100);
 

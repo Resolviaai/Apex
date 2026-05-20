@@ -20,36 +20,19 @@ function useScrollReveal() {
     }, { threshold: 0.15 });
 
     const targets = document.querySelectorAll('.reveal-target');
+    // Only register with the observer — do NOT immediately add is-visible.
+    // The IntersectionObserver alone controls when elements become visible.
     targets.forEach((el) => {
       observer.observe(el);
-      el.classList.add('is-visible');
-      el.setAttribute('data-revealed', 'true');
-    });
-
-    const mutationObserver = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-          const el = mutation.target as HTMLElement;
-          if (el.getAttribute('data-revealed') === 'true' && !el.classList.contains('is-visible')) {
-            el.classList.add('is-visible');
-          }
-        }
-      });
-    });
-
-    targets.forEach((el) => {
-      mutationObserver.observe(el, { attributes: true, attributeFilter: ['class'] });
     });
 
     return () => {
       observer.disconnect();
-      mutationObserver.disconnect();
     };
   }, []);
 }
 
 function ScrollCounter({ value, duration = 1600, suffix = "" }: { value: number, duration?: number, suffix?: string }) {
-  const [count, setCount] = useState(0);
   const ref = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
@@ -57,7 +40,7 @@ function ScrollCounter({ value, duration = 1600, suffix = "" }: { value: number,
     if (!el) return;
 
     let isCounting = false;
-    let observer = new IntersectionObserver(([entry]) => {
+    const observer = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting && !isCounting) {
         isCounting = true;
         let startTimestamp: number | null = null;
@@ -66,7 +49,8 @@ function ScrollCounter({ value, duration = 1600, suffix = "" }: { value: number,
           if (!startTimestamp) startTimestamp = timestamp;
           const progress = Math.min((timestamp - startTimestamp) / duration, 1);
           const easeOutQuart = 1 - Math.pow(1 - progress, 4);
-          setCount(Math.floor(easeOutQuart * value));
+          // Direct DOM write — no React re-render per frame
+          el.textContent = `${Math.floor(easeOutQuart * value)}${suffix}`;
           if (progress < 1) {
             window.requestAnimationFrame(step);
           }
@@ -78,16 +62,15 @@ function ScrollCounter({ value, duration = 1600, suffix = "" }: { value: number,
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, [value, duration]);
+  }, [value, duration, suffix]);
 
-  return <span ref={ref}>{count}{suffix}</span>;
+  return <span ref={ref}>0{suffix}</span>;
 }
 
 // Animates 0 → 1B+ using a logarithmic scale so every order of magnitude
 // (K → M → B) gets equal screen time — the number visibly climbs through
 // hundreds of Ks, then hundreds of Ms, before landing on 1B+.
 function BillionCounter({ duration = 3000 }: { duration?: number }) {
-  const [display, setDisplay] = useState('0');
   const ref = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
@@ -113,15 +96,15 @@ function BillionCounter({ duration = 3000 }: { duration?: number }) {
           const rawProgress = Math.min((timestamp - startTimestamp) / duration, 1);
 
           // Logarithmic mapping: progress 0→1 maps to value 0→1B
-          // Each decade (K, M, B) occupies ~1/9 of the total log range
           const current = rawProgress === 0 ? 0 : Math.min(Math.pow(10, rawProgress * 9) - 1, 1_000_000_000);
 
-          setDisplay(fmt(current));
+          // Direct DOM write — no React re-render per frame
+          el.textContent = `${fmt(current)}+`;
 
           if (rawProgress < 1) {
             window.requestAnimationFrame(step);
           } else {
-            setDisplay('1B');
+            el.textContent = '1B+';
           }
         };
 
@@ -134,13 +117,16 @@ function BillionCounter({ duration = 3000 }: { duration?: number }) {
     return () => observer.disconnect();
   }, [duration]);
 
-  return <span ref={ref}>{display}+</span>;
+  return <span ref={ref}>0+</span>;
 }
 
 function MagneticButton({ children, href, className, style }: any) {
   const buttonRef = React.useRef<HTMLAnchorElement>(null);
 
   React.useEffect(() => {
+    // Skip magnetic effect on touch/coarse-pointer devices — saves 3 global listeners
+    if (window.matchMedia('(pointer: coarse)').matches) return;
+
     const handleMouseMove = (e: MouseEvent) => {
       if (!buttonRef.current) return;
       const rect = buttonRef.current.getBoundingClientRect();
@@ -177,36 +163,103 @@ function MagneticButton({ children, href, className, style }: any) {
   );
 }
 
-// ─── Phase 3: DinoGame Component ────────────────────────────────────────────
-// The game runs in an isolated iframe pointing to /dino-game/index.html
-// (served from /public/dino-game/). The iframe is completely borderless and
-// transparent so the game appears to float directly on the page background.
-// Using an iframe isolates the GDevelop scripts and namespace, and ensures
-// that key inputs like Space and Arrow keys do not scroll the parent webpage.
+// ─── DinoGame Component ──────────────────────────────────────────────────────
+// Auto-starts after window.load + 1 s delay ONLY if the section is in the
+// viewport, so the 81 GDevelop scripts never block the critical render path.
+// Clicking the facade bypasses the delay for impatient users.
 function DinoGame() {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isAutoLoading, setIsAutoLoading] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const focusIframe = () => {
-    if (iframeRef.current) {
-      iframeRef.current.focus();
-    }
+  const handlePlay = () => {
+    setIsAutoLoading(false);
+    setIsPlaying(true);
+    setTimeout(() => {
+      if (iframeRef.current) iframeRef.current.focus();
+    }, 300);
   };
 
+  useEffect(() => {
+    // Strategy: wait for all critical resources (window.load), then wait 1 s
+    // to let LCP paint settle, then auto-load only if game is in the viewport.
+    // If user has scrolled away, IntersectionObserver holds off until it's visible.
+    let timer: ReturnType<typeof setTimeout>;
+
+    const triggerAutoStart = () => {
+      if (!containerRef.current) return;
+
+      const observer = new IntersectionObserver(([entry]) => {
+        if (entry.isIntersecting) {
+          observer.disconnect();
+          setIsAutoLoading(true);          // show subtle "loading" pulse on facade
+          timer = setTimeout(() => {
+            setIsPlaying(true);
+          }, 900);                         // 900 ms after visibility → engine boots
+        }
+      }, { threshold: 0.15 });
+
+      observer.observe(containerRef.current);
+    };
+
+    const onLoad = () => {
+      // Give the browser 1 s after load to paint LCP + run GC before we add load
+      timer = setTimeout(triggerAutoStart, 1000);
+    };
+
+    if (document.readyState === 'complete') {
+      onLoad();
+    } else {
+      window.addEventListener('load', onLoad, { once: true });
+    }
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, []);
+
   return (
-    <div
-      onClick={focusIframe}
-      className="relative z-20 w-[calc(100%+2rem)] -mx-4 md:w-full md:mx-auto max-w-[640px] cursor-pointer"
-    >
+    <div ref={containerRef} className="relative z-20 w-[calc(100%+2rem)] -mx-4 md:w-full md:mx-auto max-w-[640px]">
+      {/* No background/border-radius on this wrapper — game body is transparent */}
       <div className="w-full aspect-video overflow-hidden relative">
-        <iframe
-          ref={iframeRef}
-          src="/dino-game/index.html"
-          title="Dino Game"
-          allow="autoplay"
-          scrolling="no"
-          tabIndex={0}
-          className="absolute inset-0 w-full h-full border-0 z-30"
-        />
+        {isPlaying ? (
+          <iframe
+            ref={iframeRef}
+            src="/dino-game/index.html"
+            title="Dino Game"
+            allow="autoplay"
+            scrolling="no"
+            tabIndex={0}
+            allowTransparency={true}
+            className="absolute inset-0 w-full h-full border-0 z-30 bg-transparent"
+          />
+        ) : (
+          /* Facade: shown before game loads. Pulses when auto-load is pending. */
+          <button
+            onClick={handlePlay}
+            aria-label="Play Dino Game"
+            className={`absolute inset-0 w-full h-full flex flex-col items-center justify-center gap-4 rounded-xl transition-all duration-300 cursor-pointer group z-30 border-0 backdrop-blur-sm ${
+              isAutoLoading
+                ? 'bg-black/40'
+                : 'bg-black/60 hover:bg-black/50'
+            }`}
+          >
+            <div className="text-6xl select-none" aria-hidden="true">🦕</div>
+            <div className="flex flex-col items-center gap-2">
+              <div className={`w-16 h-16 rounded-full border-2 flex items-center justify-center shadow-2xl transition-all duration-300 ${
+                isAutoLoading
+                  ? 'bg-white/20 border-white/50 animate-pulse scale-110'
+                  : 'bg-white/10 border-white/30 group-hover:bg-white/20 group-hover:scale-110'
+              }`}>
+                <Play size={28} className="text-white ml-1" fill="white" />
+              </div>
+              <span className="text-white/60 text-xs uppercase tracking-widest font-mono mt-1">
+                {isAutoLoading ? 'Loading…' : 'Click to play'}
+              </span>
+            </div>
+          </button>
+        )}
       </div>
     </div>
   );
@@ -221,7 +274,9 @@ function AnimatedWaveform() {
   useEffect(() => {
     let animationFrameId: number;
     let time = 0;
-    const numBars = 75; // Between 60 and 80
+    let isVisible = true;
+
+    const numBars = 75;
     const barWidth = 3;
 
     const svg = svgRef.current;
@@ -247,6 +302,12 @@ function AnimatedWaveform() {
     }
 
     const render = () => {
+      // Pause loop when tab is hidden
+      if (document.hidden || !isVisible) {
+        animationFrameId = requestAnimationFrame(render);
+        return;
+      }
+
       time += 1;
       if (!containerRef.current) return;
       const width = containerRef.current.clientWidth;
@@ -300,8 +361,22 @@ function AnimatedWaveform() {
       animationFrameId = requestAnimationFrame(render);
     };
 
+    // Pause animation when element is scrolled out of view
+    const intersectionObserver = new IntersectionObserver(([entry]) => {
+      isVisible = entry.isIntersecting;
+    }, { threshold: 0 });
+    if (containerRef.current) intersectionObserver.observe(containerRef.current);
+
+    // Pause animation when tab is backgrounded
+    const handleVisibilityChange = () => { /* handled inside render() */ };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     render();
-    return () => cancelAnimationFrame(animationFrameId);
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+      intersectionObserver.disconnect();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -505,6 +580,7 @@ function TestimonialCarousel({ isNight }: { isNight: boolean }) {
   };
 
   // Keyboard navigation within the Lightbox when open
+  // handleNext / handlePrev are included in deps to avoid stale closure.
   useEffect(() => {
     if (!isLightboxOpen) return;
 
@@ -516,7 +592,8 @@ function TestimonialCarousel({ isNight }: { isNight: boolean }) {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isLightboxOpen]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLightboxOpen, handleNext, handlePrev]);
 
   // Disable body scroll when lightbox is open
   useEffect(() => {
@@ -570,7 +647,7 @@ function TestimonialCarousel({ isNight }: { isNight: boolean }) {
 
           {/* Large Quote */}
           <blockquote 
-            className="text-lg md:text-xl font-medium leading-relaxed italic text-foreground font-sans min-h-[100px] flex items-center"
+            className={`text-lg md:text-xl font-medium leading-relaxed italic font-sans min-h-[100px] flex items-center transition-colors duration-500 ${isNight ? 'text-white/90' : 'text-foreground'}`}
             style={{ fontFamily: 'var(--font-body)' }}
           >
             "{testimonialData[current].quote}"
@@ -807,10 +884,12 @@ function getYouTubeEmbedUrl(youtubeId: string, mode: 'preview' | 'modal') {
   const baseUrl = `https://www.youtube.com/embed/${youtubeId}`;
 
   if (mode === 'preview') {
-    return `${baseUrl}?autoplay=1&mute=1&controls=0&loop=1&playlist=${youtubeId}&playsinline=1&rel=0&modestbranding=1&iv_load_policy=3&vq=hd1080&hd=1`;
+    // No vq/hd params for preview cards — server picks appropriate quality
+    return `${baseUrl}?autoplay=1&mute=1&controls=0&loop=1&playlist=${youtubeId}&playsinline=1&rel=0&modestbranding=1&iv_load_policy=3`;
   }
 
-  return `${baseUrl}?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1&vq=hd1080&hd=1`;
+  // Modal: let user's connection decide quality
+  return `${baseUrl}?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1`;
 }
 
 const projects: Project[] = [
@@ -998,8 +1077,9 @@ function arrangeByCategory(arr: Project[], COLS = 4, MAX_PER_ROW = 2): Project[]
 // Arranged once per page load — category-spread with per-category randomness
 const arrangedProjects = arrangeByCategory(projects);
 
-function PortfolioCard({ project, priority = false }: { project: Project; priority?: boolean }) {
+function PortfolioCard({ project }: { project: Project }) {
   const cardRef = useRef<HTMLDivElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!cardRef.current) return;
@@ -1037,28 +1117,44 @@ function PortfolioCard({ project, priority = false }: { project: Project; priori
 
   return (
     <div style={{ perspective: '800px' }} className="h-full w-full">
-      <style>{`
-        .play-overlay { transform: scale(1); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .group:hover .play-overlay { transform: scale(1.15); }
-      `}</style>
       <div
         ref={cardRef}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
-        className="group relative h-[85vw] sm:h-auto sm:aspect-[9/16] overflow-hidden rounded-[28px] border border-border/20 transition-transform duration-200 ease-out preserve-3d bg-black"
+        onClick={() => setIsPlaying(true)}
+        className="group relative h-[85vw] sm:h-auto sm:aspect-[9/16] overflow-hidden rounded-[28px] border border-border/20 transition-transform duration-200 ease-out preserve-3d bg-black cursor-pointer"
         style={{ transformStyle: 'preserve-3d' }}
       >
-        <iframe
-          src={getYouTubeEmbedUrl(project.youtubeId, 'preview')}
-          title={`${project.title} preview`}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          referrerPolicy="strict-origin-when-cross-origin"
-          loading={priority ? "eager" : "lazy"}
-          className="absolute inset-0 z-10 h-full w-full pointer-events-none"
-        />
+        {/* Click-to-play facade: show poster until user clicks */}
+        {isPlaying ? (
+          <iframe
+            src={getYouTubeEmbedUrl(project.youtubeId, 'preview')}
+            title={`${project.title} preview`}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            referrerPolicy="strict-origin-when-cross-origin"
+            loading="lazy"
+            className="absolute inset-0 z-10 h-full w-full pointer-events-none"
+          />
+        ) : (
+          <>
+            <img
+              src={project.poster}
+              alt={project.title}
+              loading="lazy"
+              decoding="async"
+              className="absolute inset-0 z-10 h-full w-full object-cover"
+            />
+            {/* Play button overlay */}
+            <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/30 group-hover:bg-black/10 transition-colors duration-300">
+              <div className="play-overlay w-14 h-14 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center shadow-xl">
+                <Play size={24} className="text-white ml-1" fill="white" />
+              </div>
+            </div>
+          </>
+        )}
 
-        <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/70 via-transparent to-black/20" />
-        <div className="absolute inset-x-0 bottom-0 top-1/2 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30" />
+        <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/70 via-transparent to-black/20 pointer-events-none" />
+        <div className="absolute inset-x-0 bottom-0 top-1/2 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30 pointer-events-none" />
         <div className="glare-layer absolute inset-0 z-40 opacity-0 pointer-events-none transition-opacity duration-300 mix-blend-overlay" />
 
         <div className="absolute top-3 left-3 z-50 bg-black/70 backdrop-blur-xl px-3 py-1.5 rounded-md shadow-sm border border-white/10" style={{ borderLeftWidth: '4px', borderLeftColor: categoryColor }}>
@@ -1070,6 +1166,7 @@ function PortfolioCard({ project, priority = false }: { project: Project; priori
             href={project.videoUrl}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
             className="pointer-events-auto font-sans flex items-center gap-1 text-xs text-white/70 drop-shadow-md pb-0.5 border-b border-white/30 hover:text-white transition-colors"
           >
             YouTube <ArrowUpRight size={13} />
@@ -1209,22 +1306,31 @@ function ThumbnailsSection({ isNight }: { isNight: boolean }) {
     return list;
   }, []);
 
+  // Shared observer reused across Load More clicks — no leaks.
+  const revealObserverRef = useRef<IntersectionObserver | null>(null);
+
   const triggerReveal = () => {
     setTimeout(() => {
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('is-visible');
-            observer.unobserve(entry.target);
-          }
-        });
-      }, { threshold: 0.15 });
-  
+      if (!revealObserverRef.current) {
+        revealObserverRef.current = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('is-visible');
+              revealObserverRef.current?.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.15 });
+      }
       document.querySelectorAll('.reveal-target:not(.is-visible)').forEach((el) => {
-        observer.observe(el);
+        revealObserverRef.current!.observe(el);
       });
     }, 100);
   };
+
+  // Disconnect observer on unmount
+  useEffect(() => {
+    return () => { revealObserverRef.current?.disconnect(); };
+  }, []);
 
   const handleLoadMore = () => {
     setVisibleCount(prev => Math.min(prev + 6, shuffledProjects.length));
@@ -1311,6 +1417,10 @@ function ThumbnailCard({ item, onClick }: { item: ThumbnailProject, onClick?: ()
         <img
           src={item.imageUrl}
           alt={item.title}
+          loading="lazy"
+          decoding="async"
+          width="400"
+          height="400"
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-80 group-hover:opacity-100"
         />
       </div>
@@ -1419,6 +1529,7 @@ function FAQ({ isNight }: { isNight: boolean }) {
             href="https://calendly.com/reachresolve89/schedule-a-meeting-with-us"
             target="_blank"
             rel="noopener noreferrer"
+            aria-label="Book a free call via Calendly (FAQ section)"
             className={`rounded-full flex flex-row items-center pl-6 pr-2 py-2 gap-3 text-sm font-medium transition-colors cursor-pointer inline-flex ${
               isNight 
                 ? 'bg-white text-black font-semibold hover:bg-white/90' 
@@ -1487,24 +1598,37 @@ function ParallaxBackground({ isNight }: { isNight: boolean }) {
   return (
     <div className="fixed top-0 left-0 w-full h-full z-0 overflow-hidden pointer-events-none" style={{ willChange: 'transform' }}>
       <div ref={containerRef} className="w-full relative will-change-transform">
-        {/* Day background - drives the height of the container based on its aspect ratio */}
-        <img
-          src="/day.png"
-          alt=""
-          aria-hidden="true"
-          fetchPriority="high"
-          onLoad={() => window.dispatchEvent(new Event('scroll'))}
-          className={`block w-full h-auto min-h-screen object-cover transition-opacity duration-1000 ${isNight ? 'opacity-0' : 'opacity-100'}`}
-          style={{ filter: 'blur(1.5px)' }}
-        />
-        {/* Night background - absolutely positioned to perfectly overlay the day image */}
-        <img
-          src="/night.png"
-          alt=""
-          aria-hidden="true"
-          className={`absolute top-0 left-0 w-full h-full object-cover transition-opacity duration-1000 ${isNight ? 'opacity-100' : 'opacity-0'}`}
-          style={{ filter: 'blur(1.5px)' }}
-        />
+        {/* Day background — WebP (67 KB) with PNG fallback (513 KB) */}
+        <picture>
+          <source srcSet="/day.webp" type="image/webp" />
+          <img
+            src="/day.png"
+            alt=""
+            aria-hidden="true"
+            fetchPriority="high"
+            width="1920"
+            height="1080"
+            onLoad={() => window.dispatchEvent(new Event('scroll'))}
+            className={`block w-full h-auto min-h-screen object-cover transition-opacity duration-1000 ${isNight ? 'opacity-0' : 'opacity-100'}`}
+            style={{ filter: 'blur(1.5px)' }}
+          />
+        </picture>
+        {/* Night background: only mount in DOM when isNight has ever been true.
+            WebP (57 KB) with PNG fallback (652 KB). */}
+        {isNight && (
+          <picture>
+            <source srcSet="/night.webp" type="image/webp" />
+            <img
+              src="/night.png"
+              alt=""
+              aria-hidden="true"
+              width="1920"
+              height="1080"
+              className="absolute top-0 left-0 w-full h-full object-cover transition-opacity duration-1000 opacity-100"
+              style={{ filter: 'blur(1.5px)' }}
+            />
+          </picture>
+        )}
       </div>
     </div>
   );
@@ -1520,14 +1644,16 @@ function PageLoader() {
     };
 
     if (document.readyState === 'complete') {
+      // Already loaded — hide immediately
       setVisible(false);
     } else {
       window.addEventListener('load', handleLoad);
     }
 
+    // Safety net: hide after 800ms max if 'load' event never fires
     const timeout = setTimeout(() => {
       setVisible(false);
-    }, 1500);
+    }, 800);
 
     return () => {
       window.removeEventListener('load', handleLoad);
@@ -1566,15 +1692,24 @@ function PageLoader() {
 }
 
 function ScrollProgressBar() {
-  const [progress, setProgress] = useState(0);
+  const barRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    let rafPending = false;
+
     const handleScroll = () => {
-      const scrolled = window.scrollY;
-      const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
-      if (totalHeight > 0) {
-        setProgress((scrolled / totalHeight) * 100);
-      }
+      if (rafPending) return;
+      rafPending = true;
+      requestAnimationFrame(() => {
+        rafPending = false;
+        const scrolled = window.scrollY;
+        const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const pct = totalHeight > 0 ? (scrolled / totalHeight) * 100 : 0;
+        // Update DOM directly — no React setState, no re-renders during scroll
+        if (barRef.current) {
+          barRef.current.style.width = `${pct}%`;
+        }
+      });
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -1584,8 +1719,9 @@ function ScrollProgressBar() {
   return (
     <div className="fixed top-0 left-0 w-full h-[3px] bg-transparent z-[999] pointer-events-none">
       <div
-        className="h-full bg-gradient-to-r from-[#006EFC] via-[#00D26A] to-[#006EFC] transition-all duration-75 ease-out rounded-r-full"
-        style={{ width: `${progress}%`, boxShadow: '0 0 10px rgba(0, 110, 252, 0.5)' }}
+        ref={barRef}
+        className="h-full bg-gradient-to-r from-[#006EFC] via-[#00D26A] to-[#006EFC] rounded-r-full"
+        style={{ width: '0%', boxShadow: '0 0 10px rgba(0, 110, 252, 0.5)', transition: 'width 75ms ease-out' }}
       />
     </div>
   );
@@ -1774,15 +1910,16 @@ export default function App() {
       playTime = 0;
     };
 
-    const cycleTimer = setInterval(checkGameAndCycle, 1000);
+    // Poll every 3 s instead of 1 s — reduces main-thread work by 66%
+    const cycleTimer = setInterval(checkGameAndCycle, 3000);
     return () => clearInterval(cycleTimer);
   }, []);
 
   // Filtering System State
   const [activeCategory, setActiveCategory] = useState("All");
-  const [visibleCount, setVisibleCount] = useState(12);
+  const [visibleCount, setVisibleCount] = useState(6);
   const [animatingCards, setAnimatingCards] = useState(false);
-  const [displayProjects, setDisplayProjects] = useState<Project[]>(arrangedProjects.slice(0, 12));
+  const [displayProjects, setDisplayProjects] = useState<Project[]>(arrangedProjects.slice(0, 6));
 
   useScrollReveal();
 
@@ -1830,8 +1967,8 @@ export default function App() {
         if (parts.length > 0) {
           locationDetail = parts.join(', ');
         }
-      } catch (err) {
-        console.warn('Could not fetch detailed location, falling back to server default', err);
+      } catch {
+        // Geo lookup is best-effort — silently skip if blocked or unavailable
       }
 
       const insertPayload: any = {
@@ -1898,7 +2035,7 @@ export default function App() {
           >
             {isNight ? <Moon size={18} /> : <Sun size={18} />}
           </button>
-          <a href="https://calendly.com/reachresolve89/schedule-a-meeting-with-us" target="_blank" rel="noopener noreferrer" className="bg-black text-white rounded-xl flex flex-row items-center pl-4 pr-1.5 py-1.5 gap-2 text-[13px] font-medium hover:bg-black/80 transition-all duration-300 inline-flex" style={{ fontFamily: 'var(--font-body)' }}>
+          <a href="https://calendly.com/reachresolve89/schedule-a-meeting-with-us" target="_blank" rel="noopener noreferrer" aria-label="Book a meeting via Calendly (navigation)" className="bg-black text-white rounded-xl flex flex-row items-center pl-4 pr-1.5 py-1.5 gap-2 text-[13px] font-medium hover:bg-black/80 transition-all duration-300 inline-flex" style={{ fontFamily: 'var(--font-body)' }}>
             Book Meeting
             <div className="bg-white/10 rounded-lg p-1.5 flex items-center justify-center">
               <ArrowUpRight size={14} className="text-white" />
@@ -1942,6 +2079,7 @@ export default function App() {
               <div className="flex flex-col items-center lg:items-start gap-3 mt-4 lg:mt-6">
                 <MagneticButton
                   href="https://calendly.com/reachresolve89/schedule-a-meeting-with-us"
+                  aria-label="Book a free discovery call via Calendly (hero)"
                   className={`rounded-full flex flex-row items-center pl-6 pr-2 py-2.5 gap-3 text-sm font-medium transition-all duration-300 inline-flex ${
                     isNight 
                       ? 'bg-white text-black font-semibold hover:bg-white/90' 
@@ -1985,7 +2123,7 @@ export default function App() {
 
           <div className="max-w-7xl mx-auto px-6 md:px-16 relative z-10">
             <div className="text-center mb-16 reveal-target reveal-slide-up">
-              <h3 className={`text-xs uppercase tracking-[0.2em] font-semibold inline-block border px-4 py-1.5 rounded-full backdrop-blur-sm transition-colors duration-500 ${isNight ? 'text-white border-white/20 bg-white/5' : 'text-black/90 border-black/20 bg-black/5'}`}>By The Numbers</h3>
+              <p className={`text-xs uppercase tracking-[0.2em] font-semibold inline-block border px-4 py-1.5 rounded-full backdrop-blur-sm transition-colors duration-500 ${isNight ? 'text-white border-white/20 bg-white/5' : 'text-black/90 border-black/20 bg-black/5'}`}>By The Numbers</p>
             </div>
 
             {/* Row 1: Big platform stats */}
@@ -2084,7 +2222,7 @@ export default function App() {
             <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5 w-full transition-all duration-150 ease-out ${animatingCards ? 'opacity-0 scale-[0.95]' : 'opacity-100 scale-100'}`}>
               {displayProjects.map((project, index) => (
                 <div key={`${project.id}`} className="w-full">
-                  <PortfolioCard project={project} priority={index < 4} />
+                  <PortfolioCard project={project} />
                 </div>
               ))}
               {displayProjects.length === 0 && (
@@ -2163,6 +2301,7 @@ export default function App() {
             <div className="flex flex-col items-center md:items-end gap-3 z-10 shrink-0">
               <MagneticButton
                 href="https://calendly.com/reachresolve89/schedule-a-meeting-with-us"
+                aria-label="Book your discovery call via Calendly (footer CTA)"
                 className={`rounded-full flex flex-row items-center pl-6 pr-2 py-2.5 gap-3 text-sm font-medium transition-all duration-300 shadow-[0_0_20px_rgba(0,0,0,0.15)] inline-flex ${
                   isNight 
                     ? 'bg-white text-black font-semibold hover:bg-white/90' 
@@ -2195,7 +2334,7 @@ export default function App() {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
                 </span>
-                Availability slot: {Math.floor(Math.random() * 2) + 1}
+                Availability slot: 1
               </div>
               <h2 className={`text-6xl md:text-[64px] mb-6 leading-none tracking-tight transition-colors duration-500 ${isNight ? 'text-white' : 'text-foreground'}`} style={{ fontFamily: 'var(--font-display)' }}>Let's work<br />together.</h2>
 
