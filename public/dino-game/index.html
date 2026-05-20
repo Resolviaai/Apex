@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#000000">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Dino Game</title>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      /* Transparent so the parent page background shows through */
+      background: transparent;
+      overflow: hidden;
+    }
+
+    /* GDevelop places the canvas absolutely at top:0 left:0.
+       We intercept that with a full-size flex wrapper so the
+       canvas always fills the iframe exactly. */
+    #gdjs-canvas-wrapper {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Optimize canvas pixel rendering and remove click highlights */
+    canvas {
+      image-rendering: pixelated;
+      -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    }
+
+    /* Hide the GDevelop watermark overlay div */
+    #watermark,
+    #watermark-background,
+    #watermark-link {
+      display: none !important;
+    }
+  </style>
+
+  <!-- GDevelop core engine files -->
+  <script src="./jshashtable.js.download" crossorigin="anonymous"></script>
+  <script src="./logger.js.download" crossorigin="anonymous"></script>
+  <script src="./gd.js.download" crossorigin="anonymous"></script>
+  <script src="./rbush.js.download" crossorigin="anonymous"></script>
+  <script src="./AsyncTasksManager.js.download" crossorigin="anonymous"></script>
+  <script src="./inputmanager.js.download" crossorigin="anonymous"></script>
+  <script src="./jsonmanager.js.download" crossorigin="anonymous"></script>
+  <script src="./Model3DManager.js.download" crossorigin="anonymous"></script>
+  <script src="./timemanager.js.download" crossorigin="anonymous"></script>
+  <script src="./polygon.js.download" crossorigin="anonymous"></script>
+  <script src="./runtimeobject.js.download" crossorigin="anonymous"></script>
+  <script src="./profiler.js.download" crossorigin="anonymous"></script>
+  <script src="./RuntimeInstanceContainer.js.download" crossorigin="anonymous"></script>
+  <script src="./runtimescene.js.download" crossorigin="anonymous"></script>
+  <script src="./scenestack.js.download" crossorigin="anonymous"></script>
+  <script src="./force.js.download" crossorigin="anonymous"></script>
+  <script src="./RuntimeLayer.js.download" crossorigin="anonymous"></script>
+  <script src="./layer.js.download" crossorigin="anonymous"></script>
+  <script src="./RuntimeCustomObjectLayer.js.download" crossorigin="anonymous"></script>
+  <script src="./timer.js.download" crossorigin="anonymous"></script>
+  <script src="./runtimewatermark.js.download" crossorigin="anonymous"></script>
+  <script src="./runtimegame.js.download" crossorigin="anonymous"></script>
+  <script src="./variable.js.download" crossorigin="anonymous"></script>
+  <script src="./variablescontainer.js.download" crossorigin="anonymous"></script>
+  <script src="./oncetriggers.js.download" crossorigin="anonymous"></script>
+  <script src="./runtimebehavior.js.download" crossorigin="anonymous"></script>
+  <script src="./spriteruntimeobject.js.download" crossorigin="anonymous"></script>
+  <script src="./affinetransformation.js.download" crossorigin="anonymous"></script>
+  <script src="./CustomRuntimeObjectInstanceContainer.js.download" crossorigin="anonymous"></script>
+  <script src="./CustomRuntimeObject.js.download" crossorigin="anonymous"></script>
+  <script src="./commontools.js.download" crossorigin="anonymous"></script>
+  <script src="./variabletools.js.download" crossorigin="anonymous"></script>
+  <script src="./runtimescenetools.js.download" crossorigin="anonymous"></script>
+  <script src="./inputtools.js.download" crossorigin="anonymous"></script>
+  <script src="./objecttools.js.download" crossorigin="anonymous"></script>
+  <script src="./cameratools.js.download" crossorigin="anonymous"></script>
+  <script src="./soundtools.js.download" crossorigin="anonymous"></script>
+  <script src="./storagetools.js.download" crossorigin="anonymous"></script>
+  <script src="./stringtools.js.download" crossorigin="anonymous"></script>
+  <script src="./windowtools.js.download" crossorigin="anonymous"></script>
+  <script src="./networktools.js.download" crossorigin="anonymous"></script>
+  <script src="./gd-logo-light.js.download" crossorigin="anonymous"></script>
+  <script src="./pixi.js.download" crossorigin="anonymous"></script>
+  <script src="./pixi-filters-tools.js.download" crossorigin="anonymous"></script>
+  <script src="./runtimegame-pixi-renderer.js.download" crossorigin="anonymous"></script>
+  <script src="./runtimescene-pixi-renderer.js.download" crossorigin="anonymous"></script>
+  <script src="./layer-pixi-renderer.js.download" crossorigin="anonymous"></script>
+  <script src="./pixi-image-manager.js.download" crossorigin="anonymous"></script>
+  <script src="./pixi-bitmapfont-manager.js.download" crossorigin="anonymous"></script>
+  <script src="./spriteruntimeobject-pixi-renderer.js.download" crossorigin="anonymous"></script>
+  <script src="./CustomObjectPixiRenderer.js.download" crossorigin="anonymous"></script>
+  <script src="./DebuggerPixiRenderer.js.download" crossorigin="anonymous"></script>
+  <script src="./loadingscreen-pixi-renderer.js.download" crossorigin="anonymous"></script>
+  <script src="./pixi-effects-manager.js.download" crossorigin="anonymous"></script>
+  <script src="./howler.min.js.download" crossorigin="anonymous"></script>
+  <script src="./howler-sound-manager.js.download" crossorigin="anonymous"></script>
+  <script src="./fontfaceobserver.js.download" crossorigin="anonymous"></script>
+  <script src="./fontfaceobserver-font-manager.js.download" crossorigin="anonymous"></script>
+  <script src="./gdjs-evtsext__smoothcamera__smoothcamera.js.download" crossorigin="anonymous"></script>
+  <script src="./gdjs-evtsext__smoothcamera__smoothplatformercamera.js.download" crossorigin="anonymous"></script>
+  <script src="./debuggertools.js.download" crossorigin="anonymous"></script>
+  <script src="./platformerobjectruntimebehavior.js.download" crossorigin="anonymous"></script>
+  <script src="./platformruntimebehavior.js.download" crossorigin="anonymous"></script>
+  <script src="./platformtools.js.download" crossorigin="anonymous"></script>
+  <script src="./graphics-extras.min.js.download" crossorigin="anonymous"></script>
+  <script src="./shapepainterruntimeobject-pixi-renderer.js.download" crossorigin="anonymous"></script>
+  <script src="./shapepainterruntimeobject.js.download" crossorigin="anonymous"></script>
+  <script src="./textruntimeobject-pixi-renderer.js.download" crossorigin="anonymous"></script>
+  <script src="./textruntimeobject.js.download" crossorigin="anonymous"></script>
+  <script src="./tiledspriteruntimeobject-pixi-renderer.js.download" crossorigin="anonymous"></script>
+  <script src="./tiledspriteruntimeobject.js.download" crossorigin="anonymous"></script>
+  <script src="./AnimatableBehavior.js.download" crossorigin="anonymous"></script>
+  <script src="./EffectBehavior.js.download" crossorigin="anonymous"></script>
+  <script src="./FlippableBehavior.js.download" crossorigin="anonymous"></script>
+  <script src="./OpacityBehavior.js.download" crossorigin="anonymous"></script>
+  <script src="./ResizableBehavior.js.download" crossorigin="anonymous"></script>
+  <script src="./ScalableBehavior.js.download" crossorigin="anonymous"></script>
+  <script src="./TextContainerBehavior.js.download" crossorigin="anonymous"></script>
+  <script src="./HemisphereLight.js.download" crossorigin="anonymous"></script>
+  <script src="./code0.js.download" crossorigin="anonymous"></script>
+  <script src="./data.js.download" crossorigin="anonymous"></script>
+</head>
+<body>
+  <script>
+    (function () {
+      // Force disable GDevelop splash screens, watermarks, loading screens and delays
+      if (gdjs.projectData && gdjs.projectData.properties) {
+        gdjs.projectData.properties.showWatermark = false;
+        if (gdjs.projectData.properties.loadingScreen) {
+          gdjs.projectData.properties.loadingScreen.showGDevelopSplash = false;
+          gdjs.projectData.properties.loadingScreen.showProgressBar = false;
+          gdjs.projectData.properties.loadingScreen.minDuration = 0;
+          gdjs.projectData.properties.loadingScreen.backgroundFadeInDuration = 0;
+          gdjs.projectData.properties.loadingScreen.logoAndProgressFadeInDuration = 0;
+        }
+      }
+
+      // Initialize and start the GDevelop game
+      var game = new gdjs.RuntimeGame(gdjs.projectData, {});
+      window.gdjsGame = game;
+      game.getRenderer().createStandardCanvas(document.body);
+      game.getRenderer().bindStandardEvents(game.getInputManager(), window, document);
+      game.loadAllAssets(function () {
+        game.startGameLoop();
+
+        // Autoplay/autostart the game once assets are loaded
+        setTimeout(function () {
+          // Focus the canvas so the user can control it immediately with keyboard
+          window.focus();
+          var canvas = document.querySelector('canvas');
+          if (canvas) {
+            canvas.focus();
+            canvas.click();
+            
+            // Dispatch Spacebar keypress to trigger immediate game start
+            var spaceDown = new KeyboardEvent('keydown', {
+              key: ' ',
+              code: 'Space',
+              keyCode: 32,
+              which: 32,
+              bubbles: true
+            });
+            var spaceUp = new KeyboardEvent('keyup', {
+              key: ' ',
+              code: 'Space',
+              keyCode: 32,
+              which: 32,
+              bubbles: true
+            });
+            canvas.dispatchEvent(spaceDown);
+            setTimeout(function() {
+              canvas.dispatchEvent(spaceUp);
+            }, 50);
+
+            // Dispatch mobile touch event in case it starts via touch
+            var touchStart = new TouchEvent('touchstart', { bubbles: true });
+            var touchEnd = new TouchEvent('touchend', { bubbles: true });
+            canvas.dispatchEvent(touchStart);
+            setTimeout(function() {
+              canvas.dispatchEvent(touchEnd);
+            }, 50);
+          }
+        }, 100);
+
+        // Hide watermark overlays instantly (just in case they are generated dynamically)
+        var wm = document.getElementById('watermark');
+        var wmBg = document.getElementById('watermark-background');
+        var wmLink = document.getElementById('watermark-link');
+        if (wm) wm.style.display = 'none';
+        if (wmBg) wmBg.style.display = 'none';
+        if (wmLink) wmLink.style.pointerEvents = 'none';
+      });
+    })();
+  </script>
+</body>
+</html>
