@@ -854,24 +854,9 @@ function TestimonialCarousel({ isNight }: { isNight: boolean }) {
   );
 }
 
-const CATEGORY_COLORS: Record<string, string> = {
-  'Motion Graphics': '#4F7FFF',
-  'Map Animation': '#22c55e',
-  '2D Hoodie Guy Style': '#f97316',
-  '2D Animation': '#a855f7',
-  'SaaS Animation': '#06b6d4',
-  'AMV': '#e94dff',
-  'Typography': '#eab308',
-  'Simple Shorts': '#ef4444',
-  'Documentary': '#14b8a6',
-};
-
-const FILTER_CATEGORIES = ['All', ...Object.keys(CATEGORY_COLORS)];
-
 interface Project {
   id: number;
   title: string;
-  category: string;
   type: string;
   mediaType: 'video';
   description: string;
@@ -895,135 +880,93 @@ function getYouTubeEmbedUrl(youtubeId: string, mode: 'preview' | 'modal') {
 const projects: Project[] = [
   {
     id: 1,
-    title: 'Typography edit',
-    category: 'Typography',
-    type: 'Typography Short',
+    title: 'Cinematic Pacing Masterclass',
+    type: 'Retention Edit',
     mediaType: 'video',
-    description: 'Punchy type-led motion built for fast retention, crisp pacing, and high-scroll stopping power.',
-    youtubeId: 'tp6cVrtNaQM',
-    videoUrl: 'https://youtube.com/shorts/tp6cVrtNaQM',
-    poster: 'https://i.ytimg.com/vi/tp6cVrtNaQM/hqdefault.jpg'
+    description: 'Advanced flow-state edits, seamless soundscapes, and high-retention cuts designed to maximize viewer duration.',
+    youtubeId: 'usTnI6NGgx4',
+    videoUrl: 'https://youtube.com/shorts/usTnI6NGgx4',
+    poster: 'https://i.ytimg.com/vi/usTnI6NGgx4/hqdefault.jpg'
   },
   {
     id: 2,
-    title: 'cartoon animation',
-    category: '2D Animation',
-    type: 'Cartoon Animation',
+    title: 'Creative Narrative Flow',
+    type: 'Retention Edit',
     mediaType: 'video',
-    description: 'Character-driven animation with playful timing, readable staging, and a clean short-form hook.',
-    youtubeId: '7xiSD9sFVPc',
-    videoUrl: 'https://youtube.com/shorts/7xiSD9sFVPc',
-    poster: 'https://i.ytimg.com/vi/7xiSD9sFVPc/hqdefault.jpg'
+    description: 'Shaping raw footage into highly engaging stories with precise typography placement and custom visual assets.',
+    youtubeId: 'pRbztANgJBc',
+    videoUrl: 'https://youtube.com/shorts/pRbztANgJBc',
+    poster: 'https://i.ytimg.com/vi/pRbztANgJBc/hqdefault.jpg'
   },
   {
     id: 3,
-    title: 'documentary',
-    category: 'Documentary',
-    type: 'Documentary Edit',
+    title: 'Dynamic Motion Graphics',
+    type: 'Retention Edit',
     mediaType: 'video',
-    description: 'A documentary-style short shaped around clarity, mood, and narrative momentum in a compact runtime.',
-    youtubeId: 'pyaagZpUIE4',
-    videoUrl: 'https://youtube.com/shorts/pyaagZpUIE4',
-    poster: 'https://i.ytimg.com/vi/pyaagZpUIE4/hqdefault.jpg'
+    description: 'High-retention graphics and seamless animation transitions that capture attention within the first split-second.',
+    youtubeId: 'rZklGZ0xvs4',
+    videoUrl: 'https://youtube.com/shorts/rZklGZ0xvs4',
+    poster: 'https://i.ytimg.com/vi/rZklGZ0xvs4/hqdefault.jpg'
   },
   {
     id: 4,
-    title: 'Aot AMV 4k',
-    category: 'AMV',
-    type: 'Anime Music Video',
+    title: 'Retention Engineering',
+    type: 'Retention Edit',
     mediaType: 'video',
-    description: 'High-energy anime edit work with sync-heavy pacing, sharp cuts, and cinematic impact.',
-    youtubeId: 'J2zRqtzjwLk',
-    videoUrl: 'https://youtube.com/shorts/J2zRqtzjwLk',
-    poster: 'https://i.ytimg.com/vi/J2zRqtzjwLk/hqdefault.jpg'
+    description: 'Analyzing dynamic pacing structures and quick-cut pacing strategies that keep audiences hooked from start to finish.',
+    youtubeId: 'GEaGD972c48',
+    videoUrl: 'https://youtube.com/shorts/GEaGD972c48',
+    poster: 'https://i.ytimg.com/vi/GEaGD972c48/hqdefault.jpg'
   },
   {
     id: 5,
-    title: 'BMW edit 2k',
-    category: 'AMV',
-    type: 'Automotive Edit',
+    title: 'Audience Pacing Hook',
+    type: 'Retention Edit',
     mediaType: 'video',
-    description: 'An automotive short focused on polish, speed, and premium visual rhythm for car content.',
-    youtubeId: 'j86KkVflx08',
-    videoUrl: 'https://youtube.com/shorts/j86KkVflx08',
-    poster: 'https://i.ytimg.com/vi/j86KkVflx08/hqdefault.jpg'
+    description: 'Crafting irresistible intro Hooks, sound design cues, and visual loops that drive repeat watch value.',
+    youtubeId: 'VeLiq8F5BC8',
+    videoUrl: 'https://youtube.com/shorts/VeLiq8F5BC8',
+    poster: 'https://i.ytimg.com/vi/VeLiq8F5BC8/hqdefault.jpg'
   },
   {
     id: 6,
-    title: 'Moolah promotional ad',
-    category: 'SaaS Animation',
-    type: 'SaaS Animation',
+    title: 'Sound Design Precision',
+    type: 'Retention Edit',
     mediaType: 'video',
-    description: 'A promotional ad cut built to sell quickly, highlight value fast, and keep the CTA front and center.',
-    youtubeId: '1DA9knqlZoA',
-    videoUrl: 'https://youtube.com/shorts/1DA9knqlZoA',
-    poster: 'https://i.ytimg.com/vi/1DA9knqlZoA/hqdefault.jpg'
+    description: 'Immersive audio layer mapping, dynamic frequency swells, and Foley integration to elevate short-form content.',
+    youtubeId: '3Ig1HfXNGSI',
+    videoUrl: 'https://youtube.com/shorts/3Ig1HfXNGSI',
+    poster: 'https://i.ytimg.com/vi/3Ig1HfXNGSI/hqdefault.jpg'
   },
   {
     id: 7,
-    title: 'Results matters 2k',
-    category: 'Motion Graphics',
-    type: 'Motion Graphics',
+    title: 'Color Grading Depth',
+    type: 'Retention Edit',
     mediaType: 'video',
-    description: 'A direct response-focused short that keeps the message lean, visual, and conversion-minded.',
-    youtubeId: 'opXh54yLjSk',
-    videoUrl: 'https://youtube.com/shorts/opXh54yLjSk',
-    poster: 'https://i.ytimg.com/vi/opXh54yLjSk/hqdefault.jpg'
+    description: 'Vibrant color spaces, high-contrast grading curves, and custom LUT mapping to establish an elite visual identity.',
+    youtubeId: 'SaptksNoTSk',
+    videoUrl: 'https://youtube.com/shorts/SaptksNoTSk',
+    poster: 'https://i.ytimg.com/vi/SaptksNoTSk/hqdefault.jpg'
   },
   {
     id: 8,
-    title: 'animated explainer shorts',
-    category: 'Motion Graphics',
-    type: 'Motion Graphics',
+    title: 'Scroll-Stopping Edits',
+    type: 'Retention Edit',
     mediaType: 'video',
-    description: 'An animated explainer short designed for fast education, clarity, and high audience retention.',
-    youtubeId: 'AttmmiJe9uc',
-    videoUrl: 'https://youtube.com/shorts/AttmmiJe9uc',
-    poster: 'https://i.ytimg.com/vi/AttmmiJe9uc/hqdefault.jpg'
+    description: 'Aggressive pacing, visual-anchor overlays, and custom typography tracking built specifically for mobile platforms.',
+    youtubeId: 'A4WJYAhZo6g',
+    videoUrl: 'https://youtube.com/shorts/A4WJYAhZo6g',
+    poster: 'https://i.ytimg.com/vi/A4WJYAhZo6g/hqdefault.jpg'
   },
   {
     id: 9,
-    title: 'How to justify your rates',
-    category: 'Motion Graphics',
-    type: 'Motion Graphics',
+    title: 'Viral Retention Logic',
+    type: 'Retention Edit',
     mediaType: 'video',
-    description: 'A talking-point driven short built for authority, clarity, and repeat watch value.',
-    youtubeId: 'fAYGVCJ7jgM',
-    videoUrl: 'https://youtube.com/shorts/fAYGVCJ7jgM',
-    poster: 'https://i.ytimg.com/vi/fAYGVCJ7jgM/hqdefault.jpg'
-  },
-  {
-    id: 10,
-    title: 'Map Animation',
-    category: 'Map Animation',
-    type: 'Map Animation Short',
-    mediaType: 'video',
-    description: 'A data-driven map animation short combining geo-visual storytelling with fluid motion and sharp transitions.',
-    youtubeId: 'gjesrgWAFZc',
-    videoUrl: 'https://youtube.com/shorts/gjesrgWAFZc',
-    poster: 'https://i.ytimg.com/vi/gjesrgWAFZc/hqdefault.jpg'
-  },
-  {
-    id: 11,
-    title: 'Weird Crimes and Punishments from Ancient Rome',
-    category: '2D Hoodie Guy Style',
-    type: '2D Hoodie Guy Animation',
-    mediaType: 'video',
-    description: 'An educational animated short in the hoodie-guy style — punchy narration, expressive character work, and high retention pacing.',
-    youtubeId: 'NV-hvS1M59Y',
-    videoUrl: 'https://youtube.com/shorts/NV-hvS1M59Y',
-    poster: 'https://i.ytimg.com/vi/NV-hvS1M59Y/hqdefault.jpg'
-  },
-  {
-    id: 12,
-    title: '7 Reasons Why Everyone Hated Socrates',
-    category: '2D Hoodie Guy Style',
-    type: '2D Hoodie Guy Animation',
-    mediaType: 'video',
-    description: 'A history-meets-animation short using the iconic hoodie-guy format — tight scripting, clear motion, and irresistible curiosity hooks.',
-    youtubeId: 'f7VM2PEiWVQ',
-    videoUrl: 'https://youtube.com/shorts/f7VM2PEiWVQ',
-    poster: 'https://i.ytimg.com/vi/f7VM2PEiWVQ/hqdefault.jpg'
+    description: 'Converting standard footage into high-retention content through calculated text timing and modern graphic layers.',
+    youtubeId: 'EFiXJvT-71M',
+    videoUrl: 'https://youtube.com/shorts/EFiXJvT-71M',
+    poster: 'https://i.ytimg.com/vi/EFiXJvT-71M/hqdefault.jpg'
   }
 ];
 
@@ -1036,50 +979,13 @@ function shuffleArray<T>(arr: T[]): T[] {
   return a;
 }
 
-/**
- * Arranges projects so that in every row of COLS cards, no category
- * appears more than MAX_PER_ROW times. Within each category the order
- * is shuffled randomly on every page load.
- */
-function arrangeByCategory(arr: Project[], COLS = 4, MAX_PER_ROW = 2): Project[] {
-  // Group and shuffle within each category
-  const groups = new Map<string, Project[]>();
-  arr.forEach(p => {
-    if (!groups.has(p.category)) groups.set(p.category, []);
-    groups.get(p.category)!.push(p);
-  });
-  groups.forEach((items, key) => groups.set(key, shuffleArray(items)));
+const arrangedProjects = projects;
 
-  const result: Project[] = [];
-  const hasRemaining = () => [...groups.values()].some(g => g.length > 0);
-
-  while (hasRemaining()) {
-    const rowCatCount = new Map<string, number>();
-
-    for (let col = 0; col < COLS; col++) {
-      // Pick from the category with the most items remaining
-      // that hasn't yet hit MAX_PER_ROW in this row
-      const available = [...groups.entries()]
-        .filter(([cat, items]) => items.length > 0 && (rowCatCount.get(cat) ?? 0) < MAX_PER_ROW)
-        .sort(([, a], [, b]) => b.length - a.length);
-
-      if (available.length === 0) break; // every remaining category is capped for this row
-
-      const [pickedCat, pickedItems] = available[0];
-      result.push(pickedItems.shift()!);
-      rowCatCount.set(pickedCat, (rowCatCount.get(pickedCat) ?? 0) + 1);
-    }
-  }
-
-  return result;
-}
-
-// Arranged once per page load — category-spread with per-category randomness
-const arrangedProjects = arrangeByCategory(projects);
 
 function PortfolioCard({ project }: { project: Project }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!cardRef.current) return;
@@ -1104,7 +1010,19 @@ function PortfolioCard({ project }: { project: Project }) {
     }
   };
 
+  const handleMouseEnter = () => {
+    // Debounce hover slightly to avoid loading iframes while the user is rapidly scrolling past
+    hoverTimeoutRef.current = setTimeout(() => {
+      setIsPlaying(true);
+    }, 150);
+  };
+
   const handleMouseLeave = () => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+    setIsPlaying(false);
+
     if (!cardRef.current) return;
     cardRef.current.style.transform = `rotateX(0deg) rotateY(0deg)`;
     const glare = cardRef.current.querySelector('.glare-layer') as HTMLElement;
@@ -1113,13 +1031,18 @@ function PortfolioCard({ project }: { project: Project }) {
     }
   };
 
-  const categoryColor = CATEGORY_COLORS[project.category] || '#006EFC';
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    };
+  }, []);
 
   return (
     <div style={{ perspective: '800px' }} className="h-full w-full">
       <div
         ref={cardRef}
         onMouseMove={handleMouseMove}
+        onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         onClick={() => setIsPlaying(true)}
         className="group relative h-[85vw] sm:h-auto sm:aspect-[9/16] overflow-hidden rounded-[28px] border border-border/20 transition-transform duration-200 ease-out preserve-3d bg-black cursor-pointer"
@@ -1156,10 +1079,6 @@ function PortfolioCard({ project }: { project: Project }) {
         <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/70 via-transparent to-black/20 pointer-events-none" />
         <div className="absolute inset-x-0 bottom-0 top-1/2 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30 pointer-events-none" />
         <div className="glare-layer absolute inset-0 z-40 opacity-0 pointer-events-none transition-opacity duration-300 mix-blend-overlay" />
-
-        <div className="absolute top-3 left-3 z-50 bg-black/70 backdrop-blur-xl px-3 py-1.5 rounded-md shadow-sm border border-white/10" style={{ borderLeftWidth: '4px', borderLeftColor: categoryColor }}>
-          <span className="text-[10px] uppercase font-bold tracking-wider text-white border-0">{project.category}</span>
-        </div>
 
         <div className="absolute bottom-4 right-4 z-50">
           <a
@@ -1915,34 +1834,19 @@ export default function App() {
     return () => clearInterval(cycleTimer);
   }, []);
 
-  // Filtering System State
-  const [activeCategory, setActiveCategory] = useState("All");
-  const [visibleCount, setVisibleCount] = useState(6);
-  const [animatingCards, setAnimatingCards] = useState(false);
-  const [displayProjects, setDisplayProjects] = useState<Project[]>(arrangedProjects.slice(0, 6));
+  // Portfolio Projects Grid State
+  const [visibleCount, setVisibleCount] = useState(9);
+  const [displayProjects, setDisplayProjects] = useState<Project[]>(arrangedProjects.slice(0, 9));
 
   useScrollReveal();
 
-  const handleCategoryClick = (cat: string) => {
-    if (cat === activeCategory) return;
-    setAnimatingCards(true);
-    setTimeout(() => {
-      setActiveCategory(cat);
-      const newFiltered = arrangedProjects.filter(p => cat === 'All' || p.category === cat);
-      setVisibleCount(12);
-      setDisplayProjects(newFiltered.slice(0, 12));
-      setAnimatingCards(false);
-    }, 150);
-  };
-
   const handleLoadMore = () => {
-    const newCount = visibleCount + 12;
-    const newFiltered = arrangedProjects.filter(p => activeCategory === 'All' || p.category === activeCategory);
+    const newCount = visibleCount + 9;
     setVisibleCount(newCount);
-    setDisplayProjects(newFiltered.slice(0, newCount));
+    setDisplayProjects(arrangedProjects.slice(0, newCount));
   };
 
-  const currentTotal = arrangedProjects.filter(p => activeCategory === 'All' || p.category === activeCategory).length;
+  const currentTotal = arrangedProjects.length;
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -2182,44 +2086,14 @@ export default function App() {
         <SectionDivider />
 
         <section id="projects" className="relative z-10 w-full py-32 bg-transparent">
-          <style>{`
-            .filter-scrollbar::-webkit-scrollbar {
-              display: none;
-            }
-            .filter-scrollbar {
-              -ms-overflow-style: none;  
-              scrollbar-width: none;  
-              -webkit-overflow-scrolling: touch;
-            }
-          `}</style>
           <div className="max-w-7xl mx-auto px-6 md:px-16">
             <div className="reveal-target reveal-slide-left flex flex-col md:flex-row justify-between items-center md:items-end text-center md:text-left mb-12 gap-4 border-b border-border/50 pb-8">
               <h2 className={`text-5xl md:text-6xl tracking-tight transition-colors duration-500 ${isNight ? 'text-white' : ''}`} style={{ fontFamily: 'var(--font-display)' }}>Selected Works</h2>
               <p className={`max-w-sm text-sm uppercase tracking-widest font-semibold transition-colors duration-500 ${isNight ? 'text-white/70' : 'text-black/60'}`}>A collection of movement & sound.</p>
             </div>
 
-            {/* Filter Bar */}
-            <div className="flex flex-wrap lg:flex-nowrap justify-center gap-2 lg:gap-1.5 xl:gap-2 pb-4 mb-10 w-full reveal-target reveal-slide-up">
-              {FILTER_CATEGORIES.map((cat, i) => {
-                const isActive = activeCategory === cat;
-
-                return (
-                  <button
-                    key={i}
-                    onClick={() => handleCategoryClick(cat)}
-                    className={`px-4 py-2.5 md:px-5 md:py-2.5 lg:px-3 xl:px-4 rounded-full text-[10px] md:text-[11px] font-semibold leading-none uppercase tracking-wider md:tracking-widest lg:tracking-wider transition-all duration-300 flex-shrink-0 cursor-pointer whitespace-nowrap ${isActive
-                      ? 'bg-[#006EFC] text-white shadow-[0_0_15px_rgba(0,110,252,0.4)] border border-[#006EFC]'
-                      : `bg-transparent border border-border/60 hover:border-foreground/40 hover:text-foreground transition-all duration-300 ${isNight ? 'text-white/70' : 'text-black/60'}`
-                      }`}
-                  >
-                    {cat}
-                  </button>
-                );
-              })}
-            </div>
-
             {/* Grid */}
-            <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5 w-full transition-all duration-150 ease-out ${animatingCards ? 'opacity-0 scale-[0.95]' : 'opacity-100 scale-100'}`}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 w-full transition-all duration-150 ease-out">
               {displayProjects.map((project, index) => (
                 <div key={`${project.id}`} className="w-full">
                   <PortfolioCard project={project} />
@@ -2227,7 +2101,7 @@ export default function App() {
               ))}
               {displayProjects.length === 0 && (
                 <div className="py-20 text-center w-full col-span-full">
-                  <p className="text-muted-foreground/60 tracking-widest uppercase text-sm">No items matching your criteria.</p>
+                  <p className="text-muted-foreground/60 tracking-widest uppercase text-sm">No items found.</p>
                 </div>
               )}
             </div>
