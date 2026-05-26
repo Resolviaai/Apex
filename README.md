@@ -6,7 +6,7 @@
 
 Apex is a Vite + React landing page for a video editing studio focused on creators, influencers, and brands. The site highlights portfolio work, testimonials, process, and contact CTA flows for short-form video services.
 
-## Stack
+## Stack 
 
 - React 19
 - Vite 6
