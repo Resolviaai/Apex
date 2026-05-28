@@ -1106,36 +1106,13 @@ interface ThumbnailProject {
 
 const thumbnailProjects: ThumbnailProject[] = [
   { id: 1, title: 'Epstein Files Secret', category: 'Documentary', imageUrl: '/thumbnails/thumbnail_8.png', aspectRatio: '1:1' },
-  { id: 2, title: 'F1 210 MPH Reaction', category: 'Entertainment', imageUrl: '/thumbnails/thumbnail_9.png', aspectRatio: '1:1' },
-  { id: 3, title: 'Escape Simulator Thumbnails', category: 'Gaming', imageUrl: '/thumbnails/thumbnail_10.png', aspectRatio: '1:1' },
-  { id: 4, title: 'Geopolitical Strategy', category: 'Documentary', imageUrl: '/thumbnails/thumbnail_11.png', aspectRatio: '1:1' },
-  { id: 5, title: 'Porn & TikTok Brain', category: 'Lifestyle', imageUrl: '/thumbnails/thumbnail_12.png', aspectRatio: '1:1' },
-  { id: 6, title: 'Too Late Dilemma', category: 'Business', imageUrl: '/thumbnails/thumbnail_13.png', aspectRatio: '1:1' },
-  { id: 7, title: 'AI Facial Enhancement', category: 'Tech', imageUrl: '/thumbnails/thumbnail_14.png', aspectRatio: '1:1' },
-  { id: 8, title: 'Ego Confession Visual', category: 'Lifestyle', imageUrl: '/thumbnails/thumbnail_15.png', aspectRatio: '1:1' },
-  { id: 9, title: 'Xiaomi Samsung VS', category: 'Tech', imageUrl: '/thumbnails/thumbnail_16.png', aspectRatio: '1:1' },
-  { id: 10, title: '158M² House Project', category: 'Lifestyle', imageUrl: '/thumbnails/thumbnail_17.png', aspectRatio: '1:1' },
-  { id: 11, title: 'Videography Success Secret', category: 'Education', imageUrl: '/thumbnails/thumbnail_18.png', aspectRatio: '1:1' },
-  { id: 12, title: 'AI Wasp Laser Concept', category: 'Tech', imageUrl: '/thumbnails/thumbnail_19.png', aspectRatio: '1:1' },
-  { id: 13, title: 'AI Laser Wasp', category: 'Tech', imageUrl: '/thumbnails/thumbnail_20.png', aspectRatio: '1:1' },
-  { id: 14, title: 'Anatomical Shock Visual', category: 'Entertainment', imageUrl: '/thumbnails/thumbnail_21.png', aspectRatio: '1:1' },
-  { id: 15, title: 'Modern Debt Slavery', category: 'Finance', imageUrl: '/thumbnails/thumbnail_22.png', aspectRatio: '1:1' },
-  { id: 16, title: 'Hidden Camera Tech', category: 'Tech', imageUrl: '/thumbnails/thumbnail_23.png', aspectRatio: '1:1' },
-  { id: 17, title: 'I AM NOT SORRY Thumbnail', category: 'Entertainment', imageUrl: '/thumbnails/thumbnail_24.png', aspectRatio: '1:1' },
-  { id: 18, title: 'Cinematic AI Thumbnail', category: 'Entertainment', imageUrl: '/thumbnails/thumbnail_25.png', aspectRatio: '1:1' },
-  { id: 19, title: 'Indira Gandhi Conspiracy Thumbnail', category: 'Documentary', imageUrl: '/thumbnails/thumbnail_26.png', aspectRatio: '1:1' },
-  { id: 20, title: 'AI Cyborg Design', category: 'Entertainment', imageUrl: '/thumbnails/thumbnail_27.png', aspectRatio: '1:1' },
-  { id: 21, title: 'Project 28', category: 'Entertainment', imageUrl: '/thumbnails/thumbnail_28.png', aspectRatio: '1:1' },
-  { id: 22, title: 'Project 29', category: 'Entertainment', imageUrl: '/thumbnails/thumbnail_29.png', aspectRatio: '1:1' },
-  { id: 23, title: 'Project 30', category: 'Entertainment', imageUrl: '/thumbnails/thumbnail_30.png', aspectRatio: '1:1' },
-  { id: 24, title: 'Project 31', category: 'Entertainment', imageUrl: '/thumbnails/thumbnail_31.png', aspectRatio: '1:1' },
-  { id: 25, title: 'Project 32', category: 'Entertainment', imageUrl: '/thumbnails/thumbnail_32.png', aspectRatio: '1:1' },
-  { id: 26, title: 'Project 33', category: 'Entertainment', imageUrl: '/thumbnails/thumbnail_33.png', aspectRatio: '1:1' },
-  { id: 27, title: 'Project 34', category: 'Entertainment', imageUrl: '/thumbnails/thumbnail_34.png', aspectRatio: '1:1' },
-  { id: 28, title: 'Project 35', category: 'Entertainment', imageUrl: '/thumbnails/thumbnail_35.png', aspectRatio: '1:1' },
-  { id: 29, title: 'Project 36', category: 'Entertainment', imageUrl: '/thumbnails/thumbnail_36.png', aspectRatio: '1:1' },
-  { id: 30, title: 'Project 37', category: 'Entertainment', imageUrl: '/thumbnails/thumbnail_37.png', aspectRatio: '1:1' },
-  { id: 31, title: 'Project 38', category: 'Entertainment', imageUrl: '/thumbnails/thumbnail_38.png', aspectRatio: '1:1' },
+  { id: 2, title: 'Geopolitical Strategy', category: 'Documentary', imageUrl: '/thumbnails/thumbnail_11.png', aspectRatio: '1:1' },
+  { id: 3, title: '158M² House Project', category: 'Lifestyle', imageUrl: '/thumbnails/thumbnail_17.png', aspectRatio: '1:1' },
+  { id: 4, title: 'Videography Success Secret', category: 'Education', imageUrl: '/thumbnails/thumbnail_18.png', aspectRatio: '1:1' },
+  { id: 5, title: 'Modern Debt Slavery', category: 'Finance', imageUrl: '/thumbnails/thumbnail_22.png', aspectRatio: '1:1' },
+  { id: 6, title: 'Indira Gandhi Conspiracy Thumbnail', category: 'Documentary', imageUrl: '/thumbnails/thumbnail_26.png', aspectRatio: '1:1' },
+  { id: 7, title: 'Project 34', category: 'Entertainment', imageUrl: '/thumbnails/thumbnail_34.png', aspectRatio: '1:1' },
+  { id: 8, title: 'Project 36', category: 'Entertainment', imageUrl: '/thumbnails/thumbnail_36.png', aspectRatio: '1:1' },
 ];
 
 function Lightbox({ images, initialIndex, onClose }: { images: ThumbnailProject[], initialIndex: number, onClose: () => void }) {
@@ -1212,10 +1189,10 @@ function Lightbox({ images, initialIndex, onClose }: { images: ThumbnailProject[
 
 
 function ThumbnailsSection({ isNight }: { isNight: boolean }) {
-  const [visibleCount, setVisibleCount] = useState(6);
+  const [visibleCount, setVisibleCount] = useState(8);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
-  // Shuffle all 31 thumbnails exactly once on page load
+  // Shuffle all 8 thumbnails exactly once on page load
   const shuffledProjects = React.useMemo(() => {
     const list = [...thumbnailProjects];
     for (let i = list.length - 1; i > 0; i--) {
@@ -1252,7 +1229,7 @@ function ThumbnailsSection({ isNight }: { isNight: boolean }) {
   }, []);
 
   const handleLoadMore = () => {
-    setVisibleCount(prev => Math.min(prev + 6, shuffledProjects.length));
+    setVisibleCount(prev => Math.min(prev + 8, shuffledProjects.length));
     triggerReveal();
   };
 
@@ -1268,9 +1245,9 @@ function ThumbnailsSection({ isNight }: { isNight: boolean }) {
             <p className={`max-w-sm text-sm uppercase tracking-widest font-semibold transition-colors duration-500 ${isNight ? 'text-white/70' : 'text-black/60'}`}>The art of the click.</p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full items-start">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full items-start">
             {shuffledProjects.slice(0, visibleCount).map((item, index) => (
-              <div key={item.id} className="reveal-target reveal-slide-up" style={{ transitionDelay: `${(index % 6) * 100}ms` }}>
+              <div key={item.id} className="reveal-target reveal-slide-up" style={{ transitionDelay: `${(index % 8) * 100}ms` }}>
                 <ThumbnailCard item={item} onClick={() => setLightboxIndex(index)} />
               </div>
             ))}
@@ -2093,7 +2070,7 @@ export default function App() {
             </div>
 
             {/* Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 w-full transition-all duration-150 ease-out">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5 w-full transition-all duration-150 ease-out">
               {displayProjects.map((project, index) => (
                 <div key={`${project.id}`} className="w-full">
                   <PortfolioCard project={project} />
